@@ -1,0 +1,11 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Run packaged Unified Engineering Workbench",
+      "type": "shell",
+      "command": "${workspaceFolder}/Launch.exe",
+      "problemMatcher": []
+    }
+  ]
+}

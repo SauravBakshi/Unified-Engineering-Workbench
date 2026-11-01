@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Unified Engineering Workbench — PASS Science Works</title>
+  <meta name="description" content="Unified Engineering Workbench: C++17 backend for thermal FEA, performance benchmarking, hardware simulation, and backpropagation.">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header>
+  <div class="header-left">
+    <div class="eyebrow">PASS SCIENCE WORKS · R&D INTERNSHIP 2026–2027</div>
+    <h1>Unified Engineering Workbench</h1>
+    <p class="header-sub">C++17 Numerical Engine · Five-Module Engineering Prototype</p>
+  </div>
+  <div class="header-right">
+    <div id="server-status" class="status-pill status-unknown">
+      <span class="status-dot"></span>
+      <span id="status-text">Checking server…</span>
+    </div>
+    <div class="pill">C++17 CORE</div>
+  </div>
+</header>
+
+<nav id="main-nav">
+  <a href="#overview" class="nav-link active">Overview</a>
+  <a href="#geometry" class="nav-link">Geometry</a>
+  <a href="#thermal" class="nav-link">Thermal FEA</a>
+  <a href="#performance" class="nav-link">Performance</a>
+  <a href="#hardware" class="nav-link">Hardware</a>
+  <a href="#backprop" class="nav-link">Backprop</a>
+</nav>
+
+<main>
+
+<!-- ══ OVERVIEW ══════════════════════════════════════════════════════════════ -->
+<section id="overview" class="section">
+  <div class="section-header">
+    <h2>Workbench Overview</h2>
+    <p>Five integrated engineering modules powered by a C++17 computational backend served over a local HTTP API.</p>
+  </div>
+  <div class="cards overview-cards">
+    <article class="card card-interactive" onclick="scrollToSection('geometry')">
+      <div class="card-icon">⬡</div>
+      <b>Geometry Module</b>
+      <p>ASCII STL mesh upload · 3D wireframe preview · Temperature point cloud · CSV nodal data validation</p>
+      <span class="card-tag">Upload & Visualise</span>
+    </article>
+    <article class="card card-interactive" onclick="scrollToSection('thermal')">
+      <div class="card-icon">🌡</div>
+      <b>Thermal FEA</b>
+      <p>1D steady-state finite elements · Analytical comparison · Mesh convergence analysis · Node tables</p>
+      <span class="card-tag">N = 10 / 20 / 40 / 80</span>
+    </article>
+    <article class="card card-interactive" onclick="scrollToSection('performance')">
+      <div class="card-icon">⚡</div>
+      <b>Performance</b>
+      <p>Serial vs parallel workers · Fixed-seed deterministic benchmark · Speedup &amp; efficiency charts</p>
+      <span class="card-tag">5 reps · median</span>
+    </article>
+    <article class="card card-interactive" onclick="scrollToSection('hardware')">
+      <div class="card-icon">🔌</div>
+      <b>Hardware Sim</b>
+      <p>MCU · FPGA · JTAG adapter · Simulated discovery · Telemetry · Recoverable timeout</p>
+      <span class="card-tag">3 mock devices</span>
+    </article>
+    <article class="card card-interactive" onclick="scrollToSection('backprop')">
+      <div class="card-icon">∂</div>
+      <b>Backpropagation</b>
+      <p>Manual chain-rule · Finite-difference verification · 100-step training · Loss history plot</p>
+      <span class="card-tag">ε = 1e-6 check</span>
+    </article>
+  </div>
+  <div class="notice">
+    <strong>Architecture:</strong> All numerical computations, file parsing, concurrency management, and device simulation are implemented in the C++17 backend. This dashboard consumes the REST API at <code>http://127.0.0.1:8080</code>. The browser provides only presentation and interactive visualisation.
+  </div>
+</section>
+
+<!-- ══ GEOMETRY ══════════════════════════════════════════════════════════════ -->
+<section id="geometry" class="section">
+  <div class="section-header">
+    <h2>Geometry &amp; Nodal Results</h2>
+    <p>Upload an ASCII STL mesh and a temperature CSV. The C++ backend validates the files; the browser renders the 3D preview.</p>
+  </div>
+
+  <div class="split">
+    <div class="upload-panel">
+      <h3>ASCII STL File</h3>
+      <div class="drop-zone" id="stl-drop">
+        <div class="drop-icon">📁</div>
+        <p>Drop STL file here or <label for="stl-input" class="link-btn">browse</label></p>
+        <small>ASCII format only · max 20 MiB</small>
+        <input id="stl-input" type="file" accept=".stl" style="display:none">
+      </div>
+      <div id="stl-status" class="status-box muted">Select an ASCII STL file. The C++ backend validates triangles and bounds.</div>
+      <div id="stl-info" class="info-grid" style="display:none">
+        <div><span>Triangles</span><b id="stl-triangles">—</b></div>
+        <div><span>X range</span><b id="stl-xrange">—</b></div>
+        <div><span>Y range</span><b id="stl-yrange">—</b></div>
+        <div><span>Z range</span><b id="stl-zrange">—</b></div>
+      </div>
+      <canvas id="mesh-canvas" style="display:none"></canvas>
+      <div id="mesh-hint" class="hint" style="display:none">Drag to rotate · Scroll to zoom</div>
+    </div>
+
+    <div class="upload-panel">
+      <h3>Temperature CSV</h3>
+      <div class="drop-zone" id="csv-drop">
+        <div class="drop-icon">📊</div>
+        <p>Drop CSV file here or <label for="csv-input" class="link-btn">browse</label></p>
+        <small>Header: node_id,x_m,y_m,z_m,temperature_C · max 20 MiB</small>
+        <input id="csv-input" type="file" accept=".csv" style="display:none">
+      </div>
+      <div id="csv-status" class="status-box muted">Expected header: <code>node_id,x_m,y_m,z_m,temperature_C</code></div>
+      <div id="csv-info" class="info-grid" style="display:none">
+        <div><span>Nodes</span><b id="csv-nodes">—</b></div>
+        <div><span>T min</span><b id="csv-tmin">—</b></div>
+        <div><span>T max</span><b id="csv-tmax">—</b></div>
+      </div>
+      <canvas id="cloud-canvas" style="display:none"></canvas>
+      <div id="cloud-legend" class="legend" style="display:none">
+        <span style="background:hsl(220,80%,48%)"></span> Cold
+        <span style="background:hsl(110,80%,48%)"></span>
+        <span style="background:hsl(55,85%,48%)"></span>
+        <span style="background:hsl(0,85%,55%)"></span> Hot
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ THERMAL FEA ════════════════════════════════════════════════════════════ -->
+<section id="thermal" class="section">
+  <div class="section-header">
+    <h2>Thermal Finite-Element Analysis</h2>
+    <p>1D steady-state rod · two-node linear elements · insulated lateral surface · Dirichlet boundary conditions</p>
+  </div>
+
+  <div class="metrics" id="thermal-config">
+    <div><span>Length L</span><b>1 m</b></div>
+    <div><span>Area A</span><b>1 × 10⁻⁴ m²</b></div>
+    <div><span>Conductivity k</span><b>10 W/(m·K)</b></div>
+    <div><span>Generation q</span><b>10,000 W/m³</b></div>
+    <div><span>T(0)</span><b>100 °C</b></div>
+    <div><span>T(L)</span><b>20 °C</b></div>
+  </div>
+
+  <div class="formula-box">
+    <strong>Exact solution:</strong>
+    T(x) = 100 − 80x/L + [q/(2k)] · x(L − x)
+  </div>
+
+  <button id="run-thermal-btn" class="btn btn-primary" onclick="runThermal()">
+    <span class="btn-icon">▶</span> Run FEA from C++ Backend
+  </button>
+  <div id="thermal-loading" class="loading" style="display:none">Running FEA for N = 10, 20, 40, 80…</div>
+
+  <div id="thermal-results" style="display:none">
+    <div class="chart-container">
+      <canvas id="thermal-chart"></canvas>
+    </div>
+    <div class="chart-container">
+      <canvas id="convergence-chart"></canvas>
+    </div>
+
+    <h3>Nodal Temperature Tables</h3>
+    <div class="tab-group" id="thermal-tabs">
+      <button class="tab-btn active" onclick="showThermalTab(10, this)">N = 10</button>
+      <button class="tab-btn" onclick="showThermalTab(20, this)">N = 20</button>
+      <button class="tab-btn" onclick="showThermalTab(40, this)">N = 40</button>
+      <button class="tab-btn" onclick="showThermalTab(80, this)">N = 80</button>
+    </div>
+    <div class="table-container">
+      <table id="thermal-table">
+        <thead><tr><th>x (m)</th><th>T_FEM (°C)</th><th>T_exact (°C)</th><th>|Error| (°C)</th></tr></thead>
+        <tbody id="thermal-tbody"></tbody>
+      </table>
+    </div>
+    <div class="export-row">
+      <a id="thermal-csv-link" class="btn btn-outline" href="/api/results/thermal_N10.csv" download>⬇ Download N=10 CSV</a>
+      <a class="btn btn-outline" href="/api/results/thermal_N20.csv" download>⬇ N=20</a>
+      <a class="btn btn-outline" href="/api/results/thermal_N40.csv" download>⬇ N=40</a>
+      <a class="btn btn-outline" href="/api/results/thermal_N80.csv" download>⬇ N=80</a>
+      <a class="btn btn-outline" href="/api/results/thermal_convergence.csv" download>⬇ Convergence CSV</a>
+    </div>
+  </div>
+</section>
+
+<!-- ══ PERFORMANCE ════════════════════════════════════════════════════════════ -->
+<section id="performance" class="section">
+  <div class="section-header">
+    <h2>Multicore Performance Benchmark</h2>
+    <p>Fixed-seed deterministic batch · 5 measured repetitions · median wall-clock compute time · numerical agreement ≤ 1e-8 °C</p>
+  </div>
+
+  <div class="metrics" id="bench-config">
+    <div><span>Default cases</span><b>2,000</b></div>
+    <div><span>Default elements</span><b>200</b></div>
+    <div><span>Repetitions</span><b>5 (median)</b></div>
+    <div><span>Seed</span><b>2026</b></div>
+    <div><span>Max workers</span><b>min(4, logical CPUs)</b></div>
+  </div>
+
+  <div class="metrics benchmark-inputs">
+    <label>Independent cases <input id="bench-cases" type="number" min="1" max="100000" value="2000"></label>
+    <label>Elements per case <input id="bench-elements" type="number" min="2" max="10000" value="200"></label>
+    <label>Fixed seed <input id="bench-seed" type="number" min="0" value="2026"></label>
+  </div>
+  <button id="run-bench-btn" class="btn btn-primary" onclick="runBenchmark()">
+    <span class="btn-icon">⚡</span> Run Serial / Parallel Benchmark
+  </button>
+  <div id="bench-loading" class="loading" style="display:none">Running benchmark… measuring 5 reps per worker count…</div>
+
+  <div id="bench-results" style="display:none">
+    <div class="chart-row">
+      <div class="chart-container"><canvas id="bench-time-chart"></canvas></div>
+      <div class="chart-container"><canvas id="bench-speedup-chart"></canvas></div>
+    </div>
+    <div class="table-container">
+      <table id="bench-table">
+        <thead>
+          <tr>
+            <th>Workers</th>
+            <th>Median (ms)</th>
+            <th>Speedup</th>
+            <th>Efficiency</th>
+            <th>Max |ΔT| (°C)</th>
+            <th>Logical CPUs</th>
+          </tr>
+        </thead>
+        <tbody id="bench-tbody"></tbody>
+      </table>
+    </div>
+    <div id="bench-note" class="notice"></div>
+    <div class="export-row">
+      <a class="btn btn-outline" href="/api/results/benchmark.csv" download>⬇ Download benchmark.csv</a>
+    </div>
+  </div>
+</section>
+
+<!-- ══ HARDWARE ═══════════════════════════════════════════════════════════════ -->
+<section id="hardware" class="section">
+  <div class="section-header">
+    <h2>Embedded-System Integration</h2>
+    <p>Simulated device discovery interface. All device interactions are mock simulations — no physical hardware is connected.</p>
+  </div>
+
+  <button id="discover-btn" class="btn btn-primary" onclick="discoverDevices()">
+    <span class="btn-icon">🔍</span> Discover Devices
+  </button>
+  <div id="hw-loading" class="loading" style="display:none">Querying C++ device simulation…</div>
+
+  <div id="hw-devices" class="cards hw-cards" style="display:none"></div>
+
+  <div class="notice" style="margin-top:16px">
+    <strong>Note:</strong> JTAG is a debugging/programming interface, not a compute board. All three adapters are explicitly simulated. No physical hardware connection is claimed or attempted.
+  </div>
+</section>
+
+<!-- ══ BACKPROPAGATION ════════════════════════════════════════════════════════ -->
+<section id="backprop" class="section">
+  <div class="section-header">
+    <h2>Handwritten Backpropagation</h2>
+    <p>Single-sample regression with tanh hidden activation · Manual chain-rule gradients · Central finite-difference verification</p>
+  </div>
+
+  <div class="metrics">
+    <div><span>Model</span><b>h = tanh(wx+b)</b></div>
+    <div><span>Output</span><b>ŷ = vh+c</b></div>
+    <div><span>Loss</span><b>J = ½(ŷ−y)²</b></div>
+    <div><span>x</span><b>1</b></div>
+    <div><span>Target y</span><b>2</b></div>
+    <div><span>Learning rate</span><b>0.1</b></div>
+    <div><span>ε (FD check)</span><b>1e-6</b></div>
+  </div>
+
+  <div class="formula-box">
+    <strong>Initial params:</strong> w=0.5, b=0, v=1, c=0 &nbsp;|&nbsp;
+    <strong>Gradients:</strong> ∂J/∂w = δ·x &nbsp; ∂J/∂b = δ &nbsp; ∂J/∂v = (ŷ−y)·h &nbsp; ∂J/∂c = (ŷ−y) &nbsp; where δ = (ŷ−y)·v·(1−h²)
+  </div>
+
+  <button id="run-bp-btn" class="btn btn-primary" onclick="runBackprop()">
+    <span class="btn-icon">∂</span> Run 100-Step Training
+  </button>
+  <div id="bp-loading" class="loading" style="display:none">Computing backpropagation…</div>
+
+  <div id="bp-results" style="display:none">
+    <div class="info-grid" id="bp-info">
+      <div><span>h (step 0)</span><b id="bp-h">—</b></div>
+      <div><span>Prediction</span><b id="bp-pred">—</b></div>
+      <div><span>Initial loss</span><b id="bp-loss">—</b></div>
+      <div><span>∂J/∂w</span><b id="bp-dw">—</b></div>
+      <div><span>∂J/∂b</span><b id="bp-db">—</b></div>
+      <div><span>∂J/∂v</span><b id="bp-dv">—</b></div>
+      <div><span>∂J/∂c</span><b id="bp-dc">—</b></div>
+      <div><span>FD max error</span><b id="bp-fderr">—</b></div>
+    </div>
+    <div id="bp-fd-check" class="badge badge-pass" style="display:none"></div>
+    <div class="chart-container">
+      <canvas id="bp-chart"></canvas>
+    </div>
+    <div class="export-row">
+      <a class="btn btn-outline" href="/api/results/backprop_loss.csv" download>⬇ Download loss history CSV</a>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  Unified Engineering Workbench v1.0 · PASS Science Works R&D Internship 2026–2027 ·
+  All hardware interactions are simulated · C++17 numerical backend
+</footer>
+
+<script src="app.js"></script>
+</body>
+</html>

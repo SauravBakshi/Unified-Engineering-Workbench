@@ -1,0 +1,26 @@
+# Build directories
+build/
+build-*/
+cmake-build-*/
+
+# IDE files
+.vs/
+.vscode/
+
+# Compiled files
+*.exe
+*.dll
+*.o
+*.obj
+*.a
+*.lib
+*.pdb
+
+# Temporary files
+*.log
+*.tmp
+
+# Secrets
+.env
+.env.*
+!.env.example
